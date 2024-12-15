@@ -10,6 +10,9 @@ const listaDeProductos = document.querySelector('#productos');
 const miniCarrito = document.querySelector('#mini-carrito');
 miniCarrito.addEventListener('click', () => validarCarrito());
 
+const filtro = document.querySelectorAll('input[name="filtroCategoria"]');
+
+
 // Array de productos
 const productos = [
     {
@@ -133,7 +136,9 @@ const carrito = {
 
 // Creamos la grilla de prodcutos
 function grillaUI(porductos) {
-    for (const producto of productos) {
+    listaDeProductos.innerHTML = '';
+
+    for (const producto of porductos) {
 
         const itemLista = crearEtiqueta('li');
         listaDeProductos.append(itemLista);
@@ -333,4 +338,26 @@ function actualizarContadoresCarrito() {
     miniCarrito.firstElementChild.firstElementChild.textContent = carrito.calcularCantidad();
     miniCarrito.firstElementChild.nextElementSibling.firstElementChild.textContent = carrito.calcularTotal();
 
+}
+
+//filtro por precio
+for (const elemento of filtro){
+    elemento.addEventListener('change', () => {      
+
+
+        switch (elemento.value) {
+            case 'infanteria':
+                grillaUI(productos.filter(categoria => categoria.categoria === 'infanteria'));
+                break;
+            case 'vehiculo':
+                grillaUI(productos.filter(categoria => categoria.categoria === 'vehiculo'));
+                break;
+            case 'terreno':
+                grillaUI(productos.filter(categoria => categoria.categoria === 'terreno'));
+                break;
+            default:
+                grillaUI(productos);
+        }
+       }
+    )
 }
