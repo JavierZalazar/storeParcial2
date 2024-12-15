@@ -89,7 +89,7 @@ const productos = [
         nombre: 'KV1',
         descripcion: 'El KV-1 es un enorme monstruo de 45 toneladas. Fue uno de los primeros tanques pesados ​​de Rusia utilizados en la Segunda Guerra Mundial y era famoso por su casi inexpugnabilidad. El armamento antitanque alemán de la época casi no tenía forma de penetrar su blindaje; solo la falta de entrenamiento y maniobrabilidad le permitía chocar con las tácticas alemanas superiores. Su tamaño permitía al KV-1 aplastar literalmente cualquier cosa que se cruzara bajo sus gigantescas orugas, y las líneas de fuego y los campamentos eran abandonados con solo verlo. El cañón de 76,2 mm todavía atravesaba cualquiera de los blindados alemanes actuales, por lo que durante 1941 era prácticamente imparable.',
         precio: 37400,
-        imagen: 'KV_1.jpg',
+        imagen: 'kv_1.jpg',
         categoria: 'vehiculo',
     },
     {
@@ -122,33 +122,44 @@ const carrito = {
         };
         return total
     },
+
+    calcularTotal () {
+        return this.items.reduce((acumulador, valor) => acumulador + valor.precio, 0);
+    },
     calcularCantidad() { return this.items.length },
 }
 
 
 
 // Creamos la grilla de prodcutos
-for (const producto of productos) {
+function grillaUI(porductos) {
+    for (const producto of productos) {
 
-    const itemLista = crearEtiqueta('li');
-    listaDeProductos.append(itemLista);
+        const itemLista = crearEtiqueta('li');
+        listaDeProductos.append(itemLista);
 
-    const itemImg = crearEtiqueta('img', { src: `img/${producto.imagen}`, alt: producto.nombre });
-    itemLista.append(itemImg);
+        const itemImgLink = crearEtiqueta('a', {href: '#'});
+        itemLista.append(itemImgLink);
 
-    const itemDatos = crearEtiqueta('div');
-    itemLista.append(itemDatos);
+        const itemImg = crearEtiqueta('img', { src: `img/${producto.imagen}`, alt: producto.nombre });
+        itemImgLink.append(itemImg);
 
-    const itemTitulo = crearEtiqueta('h3', {}, producto.nombre);
-    const itemPrecio = crearEtiqueta('p', {}, `Precio: $${producto.precio}`);
-    const btnAgregarCarrito = crearEtiqueta('button', { class: 'addCarrito' }, 'Agregar al carrito');
-    itemDatos.append(itemTitulo, itemPrecio, btnAgregarCarrito);
+        const itemDatos = crearEtiqueta('div');
+        itemLista.append(itemDatos);
 
-    itemImg.addEventListener('click', () => modalDetalle(producto))
-    btnAgregarCarrito.addEventListener('click', () => agregarItem({ id: producto.id, nombre: producto.nombre, precio: producto.precio }));
+        const itemTitulo = crearEtiqueta('h3', {}, producto.nombre);
+        const itemPrecio = crearEtiqueta('p', {}, `Precio: $${producto.precio}`);
+        const btnAgregarCarrito = crearEtiqueta('button', { class: 'addCarrito' }, 'Agregar al carrito');
+        itemDatos.append(itemTitulo, itemPrecio, btnAgregarCarrito);
+
+        itemImgLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            modalDetalle(producto)})
+        btnAgregarCarrito.addEventListener('click', () => agregarItem({ id: producto.id, nombre: producto.nombre, precio: producto.precio }));
+    }
 }
 
-
+grillaUI(productos)
 // Funciones
 
 
