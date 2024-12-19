@@ -443,10 +443,8 @@ function checkout() {
     const btnConfirmarCheckout = crearEtiqueta('button', { type: "submit" }, 'Confirmar Pago');
 
     footerCheckout.append(formcheckoutModal)
-    //formcheckoutModal.append(btnCerrarCheckout,btnConfirmarCheckout);
     formcheckoutModal.append(btnCerrarCheckout);
 
-    //formCheckout.append(tituloChekout,nombreFormDiv,telefonoFormDiv,emailFormDiv,lugarFormDiv,fechaFormDiv,pagoFormDiv,footerCheckout);
     formCheckout.append(tituloChekout, nombreFormDiv, telefonoFormDiv, emailFormDiv, lugarFormDiv, fechaFormDiv, pagoFormDiv, footerCheckout, btnConfirmarCheckout);
     checkoutModal.append(formCheckout);
 
