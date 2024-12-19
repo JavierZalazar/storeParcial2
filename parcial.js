@@ -4,7 +4,6 @@
  * Zalazar, Mario Javier
  */
 
-
 const listaDeProductos = document.querySelector('#productos');
 const ofertas = document.querySelector('#ofertas');
 
@@ -177,6 +176,7 @@ function grillaUI(porductos) {
         })
         btnAgregarCarrito.addEventListener('click', () => agregarItem({ id: producto.id, nombre: producto.nombre, precio: producto.precio }));
     }
+    carritoGuardado();
 }
 
 grillaUI(productos)
@@ -275,7 +275,8 @@ function modalCarrito() {
             productoEncontrado.precioTotalProducto();
             actualizarContadoresCarrito();
             carritoModal.remove();
-            modalCarrito()
+            modalCarrito();
+            localStorage.setItem('ListaCarrito', JSON.stringify(carritoNew.items));
 
         });
 
@@ -292,7 +293,7 @@ function modalCarrito() {
             } else {
                 eliminarItemCarrito(e);
             }
-
+            localStorage.setItem('ListaCarrito', JSON.stringify(carritoNew.items));
         });
 
         controladroCarrito.append(sumarItemCarrito, restarItemCarrito, elimiarItem);
@@ -306,6 +307,7 @@ function modalCarrito() {
             carritoNew.items.splice(itemIndex, 1);
             carritoModal.remove();
             validarCarrito();
+            localStorage.setItem('ListaCarrito', JSON.stringify(carritoNew.items));
         }
     }
 
@@ -602,15 +604,15 @@ function agregarItem(item) {
     if (seleccionado === undefined) {
         carritoNew.items.push(new ProductoCarrito(item.id, item.nombre, item.precio, 1, item.precio))
         actualizarContadoresCarrito();
+        
     } else {
         let encontrado = (carritoNew.items.findIndex(elemento => elemento.id == item.id));
         carritoNew.items[encontrado].agregarCantidad(1);
         carritoNew.items[encontrado].precioTotalProducto();
         console.log(carritoNew.items);
         actualizarContadoresCarrito();
-
-
     }
+    localStorage.setItem('ListaCarrito', JSON.stringify(carritoNew.items));
 
 }
 
@@ -618,6 +620,7 @@ function eliminarCarrito() {
     carrito.items = [];
     carritoNew.items = [];
     actualizarContadoresCarrito();
+    localStorage.removeItem('ListaCarrito');
 }
 
 function actualizarContadoresCarrito() {
@@ -667,5 +670,17 @@ function oferta() {
 
 function confirmarCompra(e) {
     e.preventDefault();
-    console.log('enviado');
+    eliminarCarrito();
+}
+
+
+function carritoGuardado() {
+    console.log(localStorage);
+    
+    if ('ListaCarrito' in localStorage) {
+        let carritoGuardado = JSON.parse(localStorage.getItem('ListaCarrito'));
+            for (const item of carritoGuardado) {
+                agregarItem(item)
+            } 
+        }
 }
