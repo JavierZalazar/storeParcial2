@@ -133,6 +133,7 @@ const carritoNew = {
         return this.items.reduce((acumulador, valor) => acumulador + valor.total, 0);
     }
 };
+
 class ProductoCarrito {
     constructor(id, nombre, precio, cantidad, total) {
         this.id = id,
@@ -176,10 +177,10 @@ function grillaUI(porductos) {
         })
         btnAgregarCarrito.addEventListener('click', () => agregarItem({ id: producto.id, nombre: producto.nombre, precio: producto.precio }));
     }
-    carritoGuardado();
 }
 
-grillaUI(productos)
+grillaUI(productos);
+carritoGuardado();
 // Funciones
 
 
@@ -599,7 +600,6 @@ function validarCarrito() {
 }
 
 function agregarItem(item) {
-    carrito.items.push(item);
     let seleccionado = carritoNew.items.find(producto => producto.id == item.id)
     if (seleccionado === undefined) {
         carritoNew.items.push(new ProductoCarrito(item.id, item.nombre, item.precio, 1, item.precio))
@@ -609,7 +609,6 @@ function agregarItem(item) {
         let encontrado = (carritoNew.items.findIndex(elemento => elemento.id == item.id));
         carritoNew.items[encontrado].agregarCantidad(1);
         carritoNew.items[encontrado].precioTotalProducto();
-        console.log(carritoNew.items);
         actualizarContadoresCarrito();
     }
     localStorage.setItem('ListaCarrito', JSON.stringify(carritoNew.items));
@@ -675,12 +674,15 @@ function confirmarCompra(e) {
 
 
 function carritoGuardado() {
-    console.log(localStorage);
+    console.log('ejecutamos');
     
     if ('ListaCarrito' in localStorage) {
-        let carritoGuardado = JSON.parse(localStorage.getItem('ListaCarrito'));
-            for (const item of carritoGuardado) {
-                agregarItem(item)
+        let itemsCarritoGuardado = JSON.parse(localStorage.getItem('ListaCarrito'));
+            for (const item of itemsCarritoGuardado) {
+                console.log(item.id);
+                carritoNew.items.push(new ProductoCarrito(item.id, item.nombre, item.precio, item.cantidad, item.precio))
+                actualizarContadoresCarrito()
             } 
         }
 }
+
