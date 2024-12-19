@@ -92,7 +92,7 @@ const productos = [
         nombre: 'KV1',
         descripcion: 'El KV-1 es un enorme monstruo de 45 toneladas. Fue uno de los primeros tanques pesados ​​de Rusia utilizados en la Segunda Guerra Mundial y era famoso por su casi inexpugnabilidad. El armamento antitanque alemán de la época casi no tenía forma de penetrar su blindaje; solo la falta de entrenamiento y maniobrabilidad le permitía chocar con las tácticas alemanas superiores. Su tamaño permitía al KV-1 aplastar literalmente cualquier cosa que se cruzara bajo sus gigantescas orugas, y las líneas de fuego y los campamentos eran abandonados con solo verlo. El cañón de 76,2 mm todavía atravesaba cualquiera de los blindados alemanes actuales, por lo que durante 1941 era prácticamente imparable.',
         precio: 37400,
-        imagen: 'kv_1.jpg',
+        imagen: 'kv1.jpg',
         categoria: 'vehiculo',
     },
     {
