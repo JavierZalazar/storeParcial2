@@ -118,14 +118,6 @@ const provincias = ['Buenos Aires', 'Catamarca', 'Chaco', 'Chubut', 'Ciudad AutÃ
 // Objeto que administra el carrito
 const carrito = {
     items: [],
-
-    calcularTotal() {
-        return this.items.reduce((acumulador, valor) => acumulador + valor.precio, 0);
-    },
-    calcularCantidad() { return this.items.length },
-}
-const carritoNew = {
-    items: [],
     calcularCantidad() { 
         return this.items.reduce((acumulador, valor) => acumulador + valor.cantidad, 0) 
     },
@@ -260,7 +252,7 @@ function modalCarrito() {
 
     // LISTA DE PRODUCTOS
     const listaCarrito = crearEtiqueta('ul');
-    for (const item of carritoNew.items) {
+    for (const item of carrito.items) {
         const itemCarrito = crearEtiqueta('li', {}, `${item.nombre} - Unidades:${item.cantidad} - $${item.total} `);
         const controladroCarrito = crearEtiqueta('div');
         const sumarItemCarrito = crearEtiqueta('a', { href: '#', class: 'btnAdd', id: item.id }, '+');
@@ -271,19 +263,19 @@ function modalCarrito() {
 
         sumarItemCarrito.addEventListener('click', function (e) {
             e.preventDefault();
-            let productoEncontrado = carritoNew.items.find(p => p.id == e.currentTarget.id);
+            let productoEncontrado = carrito.items.find(p => p.id == e.currentTarget.id);
             productoEncontrado.agregarCantidad(1)
             productoEncontrado.precioTotalProducto();
             actualizarContadoresCarrito();
             carritoModal.remove();
             modalCarrito();
-            localStorage.setItem('ListaCarrito', JSON.stringify(carritoNew.items));
+            localStorage.setItem('ListaCarrito', JSON.stringify(carrito.items));
 
         });
 
         restarItemCarrito.addEventListener('click', function (e) {
             e.preventDefault();
-            let productoEncontrado = carritoNew.items.find(p => p.id == e.currentTarget.id);
+            let productoEncontrado = carrito.items.find(p => p.id == e.currentTarget.id);
           
             if (productoEncontrado.cantidad > 1) {
                 productoEncontrado.agregarCantidad(-1);
@@ -294,7 +286,7 @@ function modalCarrito() {
             } else {
                 eliminarItemCarrito(e);
             }
-            localStorage.setItem('ListaCarrito', JSON.stringify(carritoNew.items));
+            localStorage.setItem('ListaCarrito', JSON.stringify(carrito.items));
         });
 
         controladroCarrito.append(sumarItemCarrito, restarItemCarrito, elimiarItem);
@@ -304,15 +296,15 @@ function modalCarrito() {
         function eliminarItemCarrito(e) {
             e.preventDefault();
             e.currentTarget.closest('li').remove();
-            let itemIndex = carritoNew.items.findIndex(producto => producto.id == item.id);
-            carritoNew.items.splice(itemIndex, 1);
+            let itemIndex = carrito.items.findIndex(producto => producto.id == item.id);
+            carrito.items.splice(itemIndex, 1);
             carritoModal.remove();
             validarCarrito();
-            localStorage.setItem('ListaCarrito', JSON.stringify(carritoNew.items));
+            localStorage.setItem('ListaCarrito', JSON.stringify(carrito.items));
         }
     }
 
-    const totalCarrito = crearEtiqueta('p' , {class: 'total'}, `El precio total es de: $${carritoNew.calcularTotal()}`)
+    const totalCarrito = crearEtiqueta('p' , {class: 'total'}, `El precio total es de: $${carrito.calcularTotal()}`)
 
     //FOOTER
     const footerCarrito = crearEtiqueta('footer');
@@ -458,16 +450,18 @@ function checkout() {
     formCheckout.append(tituloChekout, nombreFormDiv, telefonoFormDiv, emailFormDiv, lugarFormDiv, fechaFormDiv, pagoFormDiv, footerCheckout, btnConfirmarCheckout);
     checkoutModal.append(formCheckout);
 
+    const nombreErrorForm = crearEtiqueta('small');
+    const telefonoErrorForm = crearEtiqueta('small');
+    const emailErrorForm = crearEtiqueta('small');
+    const direccionErrorForm = crearEtiqueta('small');
+
     formCheckout.addEventListener('submit', (e) => {
         e.preventDefault();
 
 
         const data = new FormData(e.currentTarget);
 
-        const nombreErrorForm = crearEtiqueta('small');
-        const telefonoErrorForm = crearEtiqueta('small');
-        const emailErrorForm = crearEtiqueta('small');
-        const direccionErrorForm = crearEtiqueta('small');
+       
 
         //nombre
         document.querySelector('#nombre').addEventListener('input', (e) => {
@@ -549,6 +543,7 @@ function checkout() {
         if (!data.get('nombre') == '' && !(data.get('telefono') == '' || data.get('telefono').length > 13) && data.get('email').includes('@') && !data.get('direccion') == '') {
             checkoutModal.remove()
             gracias()
+            eliminarCarrito();
         }
 
     });
@@ -590,7 +585,7 @@ function crearEtiqueta(nombre, atributos = {}, contenido = '') {
 // Funciones para el Carrito 
 function validarCarrito() {
 
-    if (carritoNew.items.length == 0) {
+    if (carrito.items.length == 0) {
         modalCarritoVacio();
         actualizarContadoresCarrito();
     } else {
@@ -600,31 +595,31 @@ function validarCarrito() {
 }
 
 function agregarItem(item) {
-    let seleccionado = carritoNew.items.find(producto => producto.id == item.id)
+    let seleccionado = carrito.items.find(producto => producto.id == item.id)
     if (seleccionado === undefined) {
-        carritoNew.items.push(new ProductoCarrito(item.id, item.nombre, item.precio, 1, item.precio))
+        carrito.items.push(new ProductoCarrito(item.id, item.nombre, item.precio, 1, item.precio))
         actualizarContadoresCarrito();
         
     } else {
-        let encontrado = (carritoNew.items.findIndex(elemento => elemento.id == item.id));
-        carritoNew.items[encontrado].agregarCantidad(1);
-        carritoNew.items[encontrado].precioTotalProducto();
+        let encontrado = (carrito.items.findIndex(elemento => elemento.id == item.id));
+        carrito.items[encontrado].agregarCantidad(1);
+        carrito.items[encontrado].precioTotalProducto();
         actualizarContadoresCarrito();
     }
-    localStorage.setItem('ListaCarrito', JSON.stringify(carritoNew.items));
+    localStorage.setItem('ListaCarrito', JSON.stringify(carrito.items));
 
 }
 
 function eliminarCarrito() {
     carrito.items = [];
-    carritoNew.items = [];
+    carrito.items = [];
     actualizarContadoresCarrito();
     localStorage.removeItem('ListaCarrito');
 }
 
 function actualizarContadoresCarrito() {
-    miniCarrito.firstElementChild.firstElementChild.textContent = carritoNew.calcularCantidad();
-    miniCarrito.firstElementChild.nextElementSibling.firstElementChild.textContent = carritoNew.calcularTotal();
+    miniCarrito.firstElementChild.firstElementChild.textContent = carrito.calcularCantidad();
+    miniCarrito.firstElementChild.nextElementSibling.firstElementChild.textContent = carrito.calcularTotal();
 }
 
 //filtro por precio
@@ -669,7 +664,6 @@ function oferta() {
 
 function confirmarCompra(e) {
     e.preventDefault();
-    eliminarCarrito();
 }
 
 
@@ -680,7 +674,7 @@ function carritoGuardado() {
         let itemsCarritoGuardado = JSON.parse(localStorage.getItem('ListaCarrito'));
             for (const item of itemsCarritoGuardado) {
                 console.log(item.id);
-                carritoNew.items.push(new ProductoCarrito(item.id, item.nombre, item.precio, item.cantidad, item.precio))
+                carrito.items.push(new ProductoCarrito(item.id, item.nombre, item.precio, item.cantidad, item.precio))
                 actualizarContadoresCarrito()
             } 
         }
