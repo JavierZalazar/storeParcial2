@@ -6,12 +6,12 @@
 
 
 const listaDeProductos = document.querySelector('#productos');
+const ofertas = document.querySelector('#ofertas');
 
 const miniCarrito = document.querySelector('#mini-carrito');
 miniCarrito.addEventListener('click', () => validarCarrito());
 
 const filtro = document.querySelectorAll('input[name="filtroCategoria"]');
-
 
 // Array de productos
 const productos = [
@@ -113,23 +113,37 @@ const productos = [
     }
 ];
 
+const provincias = ['Buenos Aires', 'Catamarca', 'Chaco', 'Chubut', 'Ciudad Autónoma de Buenos Aires', 'Córdoba', 'Corrientes', 'Entre Ríos', 'Formosa', 'Jujuy', 'La Pampa', 'La Rioja', 'Mendoza', 'Misiones', 'Neuquén', 'Río Negro', 'Salta', 'San Juan', 'Santa Cruz', 'Santa Fe', 'Santiago del Estero', 'Tierra del Fuego', 'Tucumán']
 
 
 // Objeto que administra el carrito
 const carrito = {
     items: [],
-    calcularTotal() {
-        let total = 0;
-        for (const item of this.items) {
-            total += item.precio;
-        };
-        return total
-    },
 
-    calcularTotal () {
+    calcularTotal() {
         return this.items.reduce((acumulador, valor) => acumulador + valor.precio, 0);
     },
     calcularCantidad() { return this.items.length },
+}
+const carritoNew = {
+    items: [],
+    calcularCantidad() { 
+        return this.items.reduce((acumulador, valor) => acumulador + valor.cantidad, 0) 
+    },
+    calcularTotal() {
+        return this.items.reduce((acumulador, valor) => acumulador + valor.total, 0);
+    }
+};
+class ProductoCarrito {
+    constructor(id, nombre, precio, cantidad, total) {
+        this.id = id,
+            this.nombre = nombre,
+            this.precio = precio,
+            this.cantidad = cantidad,
+            this.total = total
+    }
+    precioTotalProducto() { this.total = this.cantidad * this.precio };
+    agregarCantidad(valor) { this.cantidad += valor };
 }
 
 
@@ -143,7 +157,7 @@ function grillaUI(porductos) {
         const itemLista = crearEtiqueta('li');
         listaDeProductos.append(itemLista);
 
-        const itemImgLink = crearEtiqueta('a', {href: '#'});
+        const itemImgLink = crearEtiqueta('a', { href: '#' });
         itemLista.append(itemImgLink);
 
         const itemImg = crearEtiqueta('img', { src: `img/${producto.imagen}`, alt: producto.nombre });
@@ -159,7 +173,8 @@ function grillaUI(porductos) {
 
         itemImgLink.addEventListener('click', (e) => {
             e.preventDefault();
-            modalDetalle(producto)})
+            modalDetalle(producto)
+        })
         btnAgregarCarrito.addEventListener('click', () => agregarItem({ id: producto.id, nombre: producto.nombre, precio: producto.precio }));
     }
 }
@@ -181,9 +196,9 @@ function modalDetalle(obj) {
 
     const imgDetalle = crearEtiqueta('img', { src: `img/${obj.imagen}`, alt: obj.nombre });
     const nombreDetalle = crearEtiqueta('h3', {}, obj.nombre);
-    const descripcionDetalle = crearEtiqueta('p', {}, obj.descripcion);
-    const precioDetalle = crearEtiqueta('p', {}, `Precio: $ ${obj.precio}`);
-    const categoriaDetalle = crearEtiqueta('p', {}, obj.categoria);
+    const descripcionDetalle = crearEtiqueta('p', { class: 'detalleTexto' }, obj.descripcion);
+    const precioDetalle = crearEtiqueta('p', { class: 'detallePrecio' }, `Precio: $ ${obj.precio}`);
+    const categoriaDetalle = crearEtiqueta('p', { class: 'detalleTag' }, obj.categoria);
 
     const footterDetalle = crearEtiqueta('footer');
 
@@ -199,7 +214,7 @@ function modalDetalle(obj) {
 
     footterDetalle.append(formDetalle, btnAgregarAlCarrito);
 
-    modalDetalle.append(imgDetalle, nombreDetalle, descripcionDetalle, precioDetalle, categoriaDetalle, footterDetalle);
+    modalDetalle.append(imgDetalle, nombreDetalle, categoriaDetalle, descripcionDetalle, precioDetalle, footterDetalle);
 
     itemDetailModal.append(modalDetalle);
 }
@@ -240,26 +255,61 @@ function modalCarrito() {
 
     // HEADER CARRITO
     const headerCarrito = crearEtiqueta('header');
-    const cantidadProdutos = crearEtiqueta('span', {}, `Productos: ${carrito.calcularTotal()}`);
+    const cantidadProdutos = crearEtiqueta('h2', {}, `Mi Carrito`);
 
     // LISTA DE PRODUCTOS
     const listaCarrito = crearEtiqueta('ul');
-    for (const item of carrito.items) {
-        const itemCarrito = crearEtiqueta('li', {}, `${item.nombre} - $${item.precio} `);
-        const elimiarItem = crearEtiqueta('a', { href: '#' }, 'Eliminar');
+    for (const item of carritoNew.items) {
+        const itemCarrito = crearEtiqueta('li', {}, `${item.nombre} - Unidades:${item.cantidad} - $${item.total} `);
+        const controladroCarrito = crearEtiqueta('div');
+        const sumarItemCarrito = crearEtiqueta('a', { href: '#', class: 'btnAdd', id: item.id }, '+');
+        const restarItemCarrito = crearEtiqueta('a', { href: '#', class: 'btnSub', id: item.id }, '-');
+        const elimiarItem = crearEtiqueta('a', { href: '#', class:"eliminar"}, 'Eliminar');
 
-        elimiarItem.addEventListener('click', function (e) {
+        elimiarItem.addEventListener('click', (e) => eliminarItemCarrito(e));
+
+        sumarItemCarrito.addEventListener('click', function (e) {
             e.preventDefault();
-            e.currentTarget.closest('li').remove();
-            let itemIndex = carrito.items.findIndex(producto => producto.id == item.id);
-            carrito.items.splice(itemIndex, 1);
+            let productoEncontrado = carritoNew.items.find(p => p.id == e.currentTarget.id);
+            productoEncontrado.agregarCantidad(1)
+            productoEncontrado.precioTotalProducto();
+            actualizarContadoresCarrito();
             carritoModal.remove();
-            validarCarrito();
+            modalCarrito()
+
         });
 
-        itemCarrito.append(elimiarItem);
+        restarItemCarrito.addEventListener('click', function (e) {
+            e.preventDefault();
+            let productoEncontrado = carritoNew.items.find(p => p.id == e.currentTarget.id);
+          
+            if (productoEncontrado.cantidad > 1) {
+                productoEncontrado.agregarCantidad(-1);
+                productoEncontrado.precioTotalProducto();
+                actualizarContadoresCarrito();
+                carritoModal.remove();
+                modalCarrito()
+            } else {
+                eliminarItemCarrito(e);
+            }
+
+        });
+
+        controladroCarrito.append(sumarItemCarrito, restarItemCarrito, elimiarItem);
+        itemCarrito.append(controladroCarrito);
         listaCarrito.append(itemCarrito);
+
+        function eliminarItemCarrito(e) {
+            e.preventDefault();
+            e.currentTarget.closest('li').remove();
+            let itemIndex = carritoNew.items.findIndex(producto => producto.id == item.id);
+            carritoNew.items.splice(itemIndex, 1);
+            carritoModal.remove();
+            validarCarrito();
+        }
     }
+
+    const totalCarrito = crearEtiqueta('p' , {class: 'total'}, `El precio total es de: $${carritoNew.calcularTotal()}`)
 
     //FOOTER
     const footerCarrito = crearEtiqueta('footer');
@@ -274,16 +324,15 @@ function modalCarrito() {
     const btnVaciarCarrito = crearEtiqueta('button', {}, 'Vaciar Carrito');
     btnVaciarCarrito.addEventListener('click', () => {
         eliminarCarrito();
-        alert('Se eliminaron los productos de su carrito');
         carritoModal.remove();
+        modalCarritoVacio();
     });
 
     //BTN pagar
     const btnPagar = crearEtiqueta('button', {}, 'Proceder al pago');
     btnPagar.addEventListener('click', () => {
         carritoModal.remove();
-        eliminarCarrito();
-        alert('Gracias por su compra');
+        checkout();
     });
 
     // APPENDS
@@ -293,9 +342,231 @@ function modalCarrito() {
 
     footerCarrito.append(formCarrito, btnVaciarCarrito, btnPagar);
 
-    carritoDetalle.append(headerCarrito, listaCarrito, footerCarrito)
+    carritoDetalle.append(headerCarrito, listaCarrito, totalCarrito, footerCarrito)
 
     carritoModal.append(carritoDetalle)
+}
+
+
+function checkout() {
+    const checkoutModal = crearEtiqueta('dialog', { class: 'modal' });
+    document.body.prepend(checkoutModal);
+    checkoutModal.showModal();
+    checkoutModal.addEventListener('close', () => checkoutModal.remove());
+
+
+
+    const formCheckout = crearEtiqueta('form', { action: '#', id: 'formCheckout' });
+
+    //Datos del comprador
+    const tituloChekout = crearEtiqueta('h2', {}, 'Checkout');
+    // nombre
+    const nombreFormDiv = crearEtiqueta('div');
+    const nombreFormLabel = crearEtiqueta('label', { for: 'nombre' }, 'Nombre: ');
+    const nombreForminput = crearEtiqueta('input', { id: 'nombre', type: 'text', name: 'nombre' });
+    nombreFormDiv.append(nombreFormLabel);
+    nombreFormLabel.append(nombreForminput);
+
+    // teléfono
+    const telefonoFormDiv = crearEtiqueta('div');
+    const telefonoFormLabel = crearEtiqueta('label', { for: 'telefono' }, 'Teléfono: ');
+    const telefonoForminput = crearEtiqueta('input', { id: 'telefono', type: 'text', name: 'telefono' });
+    telefonoFormDiv.append(telefonoFormLabel);
+    telefonoFormLabel.append(telefonoForminput);
+
+    // email
+    const emailFormDiv = crearEtiqueta('div');
+    const emailFormLabel = crearEtiqueta('label', { for: 'email' }, 'Email: ');
+    const emailForminput = crearEtiqueta('input', { id: 'email', type: 'email', name: 'email' });
+    emailFormDiv.append(emailFormLabel);
+    emailFormLabel.append(emailForminput);
+
+    // lugar
+    const lugarFormDiv = crearEtiqueta('div');
+
+    const provinciaFormDiv = crearEtiqueta('div');
+    const provinciaFormLabel = crearEtiqueta('label', { for: 'provincia' }, 'Provincia: ');
+    const provinciaFormSelect = crearEtiqueta('select', { id: 'provincia', name: 'provincia' });
+    for (const provincia of provincias) {
+        const provinciaFormOption = crearEtiqueta('option', { value: provincia }, provincia)
+        provinciaFormSelect.append(provinciaFormOption);
+    }
+
+    provinciaFormDiv.append(provinciaFormLabel, provinciaFormSelect);
+
+    const direccionFormDiv = crearEtiqueta('div');
+    const direccionFormLabel = crearEtiqueta('label', { for: 'direccion' }, 'Direccion: ');
+    const direccionForminput = crearEtiqueta('input', { id: 'direccion', type: 'text', name: 'direccion' });
+    direccionFormDiv.append(direccionFormLabel);
+    direccionFormLabel.append(direccionForminput);
+    lugarFormDiv.append(provinciaFormDiv, direccionFormDiv)
+
+    // fecha
+    const fechaFormDiv = crearEtiqueta('div');
+    const fechaFormLabel = crearEtiqueta('label', { for: 'fecha' }, 'Fecha de entrega: ');
+    const fechaForminput = crearEtiqueta('input', { id: 'fecha', type: 'date', name: 'fecha' });
+    fechaFormDiv.append(fechaFormLabel);
+    fechaFormLabel.append(fechaForminput);
+
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const yyyy = tomorrow.getFullYear();
+    const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const dd = String(tomorrow.getDate()).padStart(2, '0');
+    const tomorrowString = `${yyyy}-${mm}-${dd}`;
+
+    fechaForminput.min = tomorrowString;
+    fechaForminput.value = tomorrowString;
+
+    // metodo de pago 
+    const pagoFormDiv = crearEtiqueta('div');
+    const pagoFormTitulo = crearEtiqueta('h3', {}, 'Elija su medio de pago');
+
+    const pagoFormGroupDiv = crearEtiqueta('div');
+    const pagoFormLabelEfectivo = crearEtiqueta('label', {}, 'Efectivo ');
+    const pagoFormRadioEfectivo = crearEtiqueta('input', { type: 'radio', name: 'medioDePago', id: 'mpefectivo', value: 'mpefectivo', checked: 'checked' });
+    const pagoFormLabelTrans = crearEtiqueta('label', {}, 'Transferencia ');
+    const pagoFormRadioTrans = crearEtiqueta('input', { type: 'radio', name: 'medioDePago', id: 'mptrans', value: 'mptrans' });
+    pagoFormLabelEfectivo.append(pagoFormRadioEfectivo);
+    pagoFormLabelTrans.append(pagoFormRadioTrans);
+
+    pagoFormGroupDiv.append(pagoFormLabelEfectivo, pagoFormLabelTrans);
+
+    pagoFormDiv.append(pagoFormTitulo, pagoFormGroupDiv)
+
+
+
+    //Footer para cerrar o confirmar pago
+    const formcheckoutModal = crearEtiqueta('form');
+    formcheckoutModal.method = 'dialog';
+
+    const footerCheckout = crearEtiqueta('div');
+    const btnCerrarCheckout = crearEtiqueta('button');
+    btnCerrarCheckout.textContent = 'Cerrar';
+
+    const btnConfirmarCheckout = crearEtiqueta('button', { type: "submit" }, 'Confirmar Pago');
+
+    footerCheckout.append(formcheckoutModal)
+    //formcheckoutModal.append(btnCerrarCheckout,btnConfirmarCheckout);
+    formcheckoutModal.append(btnCerrarCheckout);
+
+    //formCheckout.append(tituloChekout,nombreFormDiv,telefonoFormDiv,emailFormDiv,lugarFormDiv,fechaFormDiv,pagoFormDiv,footerCheckout);
+    formCheckout.append(tituloChekout, nombreFormDiv, telefonoFormDiv, emailFormDiv, lugarFormDiv, fechaFormDiv, pagoFormDiv, footerCheckout, btnConfirmarCheckout);
+    checkoutModal.append(formCheckout);
+
+    formCheckout.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+
+        const data = new FormData(e.currentTarget);
+
+        const nombreErrorForm = crearEtiqueta('small');
+        const telefonoErrorForm = crearEtiqueta('small');
+        const emailErrorForm = crearEtiqueta('small');
+        const direccionErrorForm = crearEtiqueta('small');
+
+        //nombre
+        document.querySelector('#nombre').addEventListener('input', (e) => {
+            const campo = e.currentTarget;
+
+            if (campo.value.length >= 1) {
+                formCheckout.nombre.removeAttribute('data-invalid');
+                nombreErrorForm.textContent = '';
+            }
+        })
+
+        if (data.get('nombre') == '') {
+            formCheckout.nombre.setAttribute('data-invalid', 'true');
+            nombreErrorForm.textContent = 'Se requiere indicar su nombre';
+            nombreFormDiv.append(nombreErrorForm);
+        } else {
+            formCheckout.nombre.removeAttribute('data-invalid');
+            nombreErrorForm.textContent = '';
+        }
+
+        //telefono
+        document.querySelector('#telefono').addEventListener('input', (e) => {
+            const campo = e.currentTarget;
+
+            if (campo.value.length >= 6) {
+                formCheckout.telefono.removeAttribute('data-invalid');
+                telefonoErrorForm.textContent = '';
+            }
+        })
+
+        if (data.get('telefono') == '' || data.get('telefono').length > 13) {
+            formCheckout.telefono.setAttribute('data-invalid', 'true');
+            telefonoErrorForm.textContent = 'El teléfono es invalido';
+            telefonoFormDiv.append(telefonoErrorForm);
+        } else {
+            formCheckout.telefono.removeAttribute('data-invalid');
+            telefonoErrorForm.textContent = '';
+        }
+
+        //emails
+        document.querySelector('#email').addEventListener('input', (e) => {
+            const campo = e.currentTarget;
+
+            if (campo.value.includes('@')) {
+                formCheckout.email.removeAttribute('data-invalid');
+                emailErrorForm.textContent = '';
+            }
+        })
+
+        if (!data.get('email').includes('@')) {
+            formCheckout.email.setAttribute('data-invalid', 'true');
+            emailErrorForm.textContent = 'El email es invalido';
+            emailFormDiv.append(emailErrorForm);
+        } else {
+            formCheckout.email.removeAttribute('data-invalid');
+            emailErrorForm.textContent = '';
+        }
+
+        //direccion
+        document.querySelector('#direccion').addEventListener('input', (e) => {
+            const campo = e.currentTarget;
+
+            if (campo.value.length >= 1) {
+                formCheckout.direccion.removeAttribute('data-invalid');
+                direccionErrorForm.textContent = '';
+            }
+        })
+
+        if (data.get('direccion') == '') {
+            formCheckout.direccion.setAttribute('data-invalid', 'true');
+            direccionErrorForm.textContent = 'Se requiere indicar su direccion';
+            direccionFormDiv.append(direccionErrorForm);
+        } else {
+            formCheckout.direccion.removeAttribute('data-invalid');
+            direccionErrorForm.textContent = '';
+        }
+
+
+        if (!data.get('nombre') == '' && !(data.get('telefono') == '' || data.get('telefono').length > 13) && data.get('email').includes('@') && !data.get('direccion') == '') {
+            checkoutModal.remove()
+            gracias()
+        }
+
+    });
+
+}
+
+
+function gracias() {
+    const graciasModal = crearEtiqueta('dialog', { class: 'modal gracias' });
+    document.body.prepend(graciasModal);
+    graciasModal.showModal();
+    graciasModal.addEventListener('close', () => graciasModal.remove());
+
+    const graciasMensajeTitulo = crearEtiqueta('h2', {}, '¡Gracias por tu compra!');
+    const graciasMensajeTexto1 = crearEtiqueta('p', {}, 'Tu pedido está siendo procesado y pronto estará en camino.');
+    const graciasMensajeTexto2 = crearEtiqueta('p', {}, 'Revisa tu correo para obtener más detalles y seguimiento. Si tienes preguntas, ¡estamos aquí para ayudarte!');
+    graciasModal.append(graciasMensajeTitulo, graciasMensajeTexto1, graciasMensajeTexto2);
+
+    setTimeout(() => {
+        graciasModal.remove();
+    }, 1500);
 }
 
 
@@ -315,7 +586,8 @@ function crearEtiqueta(nombre, atributos = {}, contenido = '') {
 
 // Funciones para el Carrito 
 function validarCarrito() {
-    if (carrito.items.length == 0) {
+
+    if (carritoNew.items.length == 0) {
         modalCarritoVacio();
         actualizarContadoresCarrito();
     } else {
@@ -326,38 +598,74 @@ function validarCarrito() {
 
 function agregarItem(item) {
     carrito.items.push(item);
-    actualizarContadoresCarrito();
+    let seleccionado = carritoNew.items.find(producto => producto.id == item.id)
+    if (seleccionado === undefined) {
+        carritoNew.items.push(new ProductoCarrito(item.id, item.nombre, item.precio, 1, item.precio))
+        actualizarContadoresCarrito();
+    } else {
+        let encontrado = (carritoNew.items.findIndex(elemento => elemento.id == item.id));
+        carritoNew.items[encontrado].agregarCantidad(1);
+        carritoNew.items[encontrado].precioTotalProducto();
+        console.log(carritoNew.items);
+        actualizarContadoresCarrito();
+
+
+    }
+
 }
 
 function eliminarCarrito() {
     carrito.items = [];
+    carritoNew.items = [];
     actualizarContadoresCarrito();
 }
 
 function actualizarContadoresCarrito() {
-    miniCarrito.firstElementChild.firstElementChild.textContent = carrito.calcularCantidad();
-    miniCarrito.firstElementChild.nextElementSibling.firstElementChild.textContent = carrito.calcularTotal();
-
+    miniCarrito.firstElementChild.firstElementChild.textContent = carritoNew.calcularCantidad();
+    miniCarrito.firstElementChild.nextElementSibling.firstElementChild.textContent = carritoNew.calcularTotal();
 }
 
 //filtro por precio
-for (const elemento of filtro){
-    elemento.addEventListener('change', () => {      
+for (const elemento of filtro) {
+    elemento.addEventListener('change', () => {
 
 
         switch (elemento.value) {
             case 'infanteria':
                 grillaUI(productos.filter(categoria => categoria.categoria === 'infanteria'));
+                oferta();
                 break;
             case 'vehiculo':
                 grillaUI(productos.filter(categoria => categoria.categoria === 'vehiculo'));
+                oferta();
                 break;
             case 'terreno':
                 grillaUI(productos.filter(categoria => categoria.categoria === 'terreno'));
+                oferta();
                 break;
             default:
                 grillaUI(productos);
+                oferta();
         }
-       }
+    }
     )
+}
+
+
+
+function oferta() {
+    const bannerEtiqueta = crearEtiqueta('div', { class: 'bannerOferta' });
+    const bannerImg = crearEtiqueta('img', { src: 'img/15_off.png' });
+    bannerEtiqueta.append(bannerImg);
+    ofertas.append(bannerEtiqueta);
+
+    setTimeout(() => {
+        ofertas.innerHTML = '';
+    }, 10000);
+
+}
+
+function confirmarCompra(e) {
+    e.preventDefault();
+    console.log('enviado');
 }
